@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
+        <title>HCM的消息墙</title>
         <script src="./components/api/api.js"></script>
         <link rel="stylesheet" href="./main.css" />
         <link rel="stylesheet" href="./components/alert/alert.css" />
@@ -16,20 +16,51 @@
             const myAlert = new Alert(3500);
             async function render() {
                 const posts = await api.getPosts();
-                document.querySelector(".posts").innerHTML = "";
+                // document.querySelector(".posts").innerHTML = "";
+
                 posts.results.forEach((data) => {
-                    document.querySelector(".posts").innerHTML += `
-                    <div class="post">
-                        <p>${data.content}</p>
-                        <div class="post-bottom">
-                            <span>${formatTime(data.publish_time)}</span>
-                            <div>
-                                <button class="edit">编辑</button>
-                                <button class="delete">删除</button>
-                            </div>
-                        </div>
-                    </div>
-                    `;
+                    const postEle = document.createElement("div");
+                    postEle.classList.add("post");
+                    document.querySelector(".posts").append(postEle);
+                    const pEle = document.createElement("p");
+                    pEle.innerText = `${data.content}`;
+                    postEle.prepend(pEle);
+                    const postBottom = document.createElement("div");
+                    postBottom.classList.add("post-bottom");
+                    const timeEle = document.createElement("span");
+                    timeEle.innerText = `${formatTime(data.publish_time)}`;
+                    postBottom.prepend(timeEle);
+                    const bottoms = document.createElement("div");
+                    postBottom.append(bottoms);
+                    const editBottom = document.createElement("button");
+                    editBottom.classList.add("edit");
+                    editBottom.innerText = "编辑";
+                    bottoms.append(editBottom);
+                    const deleteBottom = document.createElement("button");
+                    deleteBottom.classList.add("delete");
+                    deleteBottom.id = data.post_id;
+                    deleteBottom.innerText = "删除";
+                    deleteBottom.onclick = async () => {
+                        await api.deletePosts(data.post_id);
+                        postEle.remove();
+                    };
+                    bottoms.append(deleteBottom);
+                    postEle.append(postBottom);
+                    editBottom.onclick = editPost;
+                    deleteBottom.onclick = deletePost;
+
+                    //   document.querySelector(".posts").innerHTML += `
+                    //             <div class="post">
+                    //                 <p>${data.content}</p>
+                    //                 <div class="post-bottom">
+                    //                     <span>${formatTime(data.publish_time)}</span>
+                    //                     <div>
+                    //                         <button class="edit">编辑</button>
+                    //                         <button class="delete">删除</button>
+                    //                     </div>
+                    //                 </div>
+                    //             </div>
+                    //             `;
                 });
             }
             window.addEventListener("load", function () {
@@ -66,10 +97,14 @@
                     myAlert.alertSuccess("发布成功");
                     clearTextarea();
                     hideTextarea();
+                    document.querySelector(".posts").innerHTML = "";
                     render();
                 };
             });
             //格式化时间戳
+            function fillZero(number) {
+                return number >= 10 ? number : `0${number}`;
+            }
             function formatTime(time) {
                 const postTime = new Date(time * 1000);
                 return `${postTime.getFullYear()}-${fillZero(
@@ -78,20 +113,47 @@
                     postTime.getHours()
                 )}:${fillZero(postTime.getMinutes())}`;
             }
-            function fillZero(number) {
-                return number > 10 ? number : `0${numebr}`;
-            }
             //删除消息
-            // document.querySelector(".delete").onclick = async function (event) {
-            //     const post_id = await api.deletePosts(post_id);
-            // };
+            function deletePost(event) {
+                const confir = confirm("确定要删除吗？");
+                if (confir) {
+                    event.currentTarget.parentNode.parentNode.parentNode.remove();
+                    api.deletePosts(event.currentTarget.id);
+                    myAlert.alertSuccess("删除成功");
+                } else {
+                    return;
+                }
+
+                // render();
+            }
+            //编辑消息
+            function editPost(event) {
+                const editingPost = document.querySelector(".input-dialog");
+                console.log(editingPost.firstElementChild.value);
+                editingPost.firstElementChild.value =
+                    event.currentTarget.parentNode.parentNode.previousSibling.innerText;
+                event.currentTarget.parentNode.parentNode.parentNode.replaceWith(
+                    editingPost
+                );
+                // event.currentTarget.parentNode.parentNode.parentNode.innerHTML = `
+                //     <div class="post input-dialog">
+                //         <textarea
+                //             class="input-content"
+                //             rows="5"
+                //         >${event.currentTarget.parentNode.parentNode.previousSibling.innerText}</textarea>
+                //         <div class="buttons">
+                //             <button class="confirm">确认</button>
+                //             <button class="cancel" onclick="cancel">取消</button>
+                //         </div>
+                //     </div>`;
+            }
             render();
         </script>
     </head>
     <body>
         <div class="container">
             <header>
-                <h2>三眼鸭的消息墙</h2>
+                <h2>消息墙</h2>
                 <div class="search">
                     <input type="text" placeholder="输入你要搜索的内容" />
                     <button>搜索</button>
@@ -113,16 +175,16 @@
                     </div>
                 </div>
                 <div class="posts">
-                    <div class="post">
-                        <p>New Message : Hello World</p>
-                        <div class="post-bottom">
-                            <span>2022-11-23 09:29</span>
-                            <div>
-                                <button class="edit">编辑</button>
-                                <button class="delete">删除</button>
-                            </div>
+                    <!-- <div class="post">
+                      <p>New Message : Hello World</p>
+                      <div class="post-bottom">
+                        <span>2022-11-23 09:29</span>
+                        <div>
+                          <button class="edit">编辑</button>
+                          <button class="delete">删除</button>
                         </div>
-                    </div>
+                      </div>
+                    </div> -->
                 </div>
             </main>
             <button class="submit">发布</button>
