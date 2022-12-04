@@ -2,38 +2,51 @@ class Api {
     constructor(baseUrl) {
         this.baseUrl = baseUrl;
     }
-    async getPosts() {
-        const response = await fetch(`${this.baseUrl}/posts`);
+
+    async getPosts({ page = 1, limit = 5, search = "" } = {}) {
+        const url = new URL(`${this.baseUrl}/posts`);
+        url.searchParams.append("page", page);
+        url.searchParams.append("limit", limit);
+        url.searchParams.append("search", search);
+
+        const response = await fetch(url);
+
         return response.json();
     }
+
     async publishPost(content) {
         const response = await fetch(`${this.baseUrl}/posts`, {
-            method: "POST",
+            method: "post",
             headers: {
-                "content-type": "application/json",
+                "Content-Type": "application/json", // 表明内容是 JSON 格式
             },
             body: JSON.stringify({
                 content,
-            }),
+            }), // 序列化对象
         });
+
         return response.json();
     }
-    async editPosts(postId, content) {
+
+    async updatePost(postId, content) {
         const response = await fetch(`${this.baseUrl}/posts/${postId}`, {
-            method: "PUT",
+            method: "put",
             headers: {
-                "content-type": "application/json",
+                "Content-Type": "application/json", // 表明内容是 JSON 格式
             },
             body: JSON.stringify({
                 content,
-            }),
+            }), // 序列化对象
         });
+
         return response.json();
     }
-    async deletePosts(postId) {
+
+    async deletePost(postId) {
         const response = await fetch(`${this.baseUrl}/posts/${postId}`, {
-            method: "DELETE",
+            method: "delete",
         });
+
         return response.json();
     }
 }
